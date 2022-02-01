@@ -145,6 +145,32 @@ def _finalize_checkout(
         return None
 
 
+def handle_processing_payment_intent(
+    payment_intent: PaynowObject, gateway_config: "GatewayConfig", _channel_slug: str
+):
+    payment = _get_payment(payment_intent.payment_id)
+
+    if not payment:
+        logger.warning(
+            "Payment for PaymentIntent was not found",
+            extra={"payment_intent": payment_intent.id},
+        )
+        return
+    if payment.order_id:
+        # Order already created
+        return
+
+    if payment.checkout_id:
+        checkout = _get_checkout(payment_id=payment.pk)
+        if checkout:
+            _finalize_checkout(
+                checkout=checkout,
+                payment=payment,
+                payment_intent=payment_intent,
+                kind=TransactionKind.PENDING,
+            )
+
+
 def handle_successful_payment_intent(
     payment_intent: PaynowObject, gateway_config: "GatewayConfig", channel_slug: str
 ):
@@ -202,5 +228,7 @@ def handle_successful_payment_intent(
 @transaction_with_commit_on_errors()
 def handle_webhook(payment, status: PaymentStatus, config, slug):
     if status == PaymentStatus.CONFIRMED:
-        result = handle_successful_payment_intent(payment, config, slug)
+        handle_successful_payment_intent(payment, config, slug)
+    elif status == PaymentStatus.PENDING:
+        handle_processing_payment_intent(payment, config, slug)
     return HttpResponse(status=200)
