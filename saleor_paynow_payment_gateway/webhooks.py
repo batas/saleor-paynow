@@ -111,7 +111,9 @@ def _finalize_checkout(
 
     manager = get_plugins_manager()
     discounts = fetch_active_discounts()
-    lines = fetch_checkout_lines(checkout)
+    lines, unavailable_variant_pks = fetch_checkout_lines(checkout)
+    if unavailable_variant_pks:
+        raise ValidationError("Some of the checkout lines variants are unavailable.")
     checkout_info = fetch_checkout_info(checkout, lines, discounts, manager)
     checkout_total = calculate_checkout_total_with_gift_cards(
         manager=manager,
