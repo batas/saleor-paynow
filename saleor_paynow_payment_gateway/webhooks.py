@@ -183,13 +183,6 @@ def handle_successful_payment_intent(
         )
         return
 
-    # api_key = gateway_config.connection_params["secret_api_key"]
-
-    # if payment_intent.setup_future_usage:
-    #     update_payment_method(api_key, payment_intent.payment_method, channel_slug)
-
-    # update_payment_method_details_from_intent(payment, payment_intent)
-
     if payment.order_id:
         if payment.charge_status in [ChargeStatus.PENDING, ChargeStatus.NOT_CHARGED]:
             capture_transaction = _update_payment_with_new_transaction(

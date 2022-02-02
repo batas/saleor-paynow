@@ -308,15 +308,4 @@ class PayNowPlugin(BasePlugin):
             return handle_webhook(
                 paynow_payment, payment_status, self.config, self.channel.slug
             )
-            # if payment_status == PaymentStatus.CONFIRMED:
-            #     self._confirm_payment(body["paymentId"], body["externalId"])
-            # else:
-            #     return JsonResponse(
-            #         data={
-            #             "status": "error",
-            #             "message": f"unhandled status {payment_status}",  # TODO
-            #         }
-            #     )
-
-            return JsonResponse(data={"status": "ok"})
         return HttpResponseNotFound()
