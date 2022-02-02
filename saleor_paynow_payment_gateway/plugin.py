@@ -101,9 +101,16 @@ class PayNowPlugin(BasePlugin):
         return plugin_id.startswith(cls.PLUGIN_ID)
 
     def _calculate_hmac(self, data):
+        if isinstance(data, str):
+            data = data.encode()
+        elif isinstance(data, bytes):
+            pass
+        else:
+            data = json.dumps(data).encode()
+
         hashed_object = hmac.new(
             self.config.connection_params["signature_key"].encode(),
-            json.dumps(data).encode(),
+            data,
             hashlib.sha256,
         ).digest()
         return base64.b64encode(hashed_object)
@@ -293,7 +300,7 @@ class PayNowPlugin(BasePlugin):
                 log.error("Failed to parse request body", exc_info=True)
                 return HttpResponseServerError()
 
-            signature = self._calculate_hmac(body).decode("utf-8")
+            signature = self._calculate_hmac(request.body).decode("utf-8")
             if request.headers.get("Signature") != signature:
                 log.error(
                     "Invalid signature (%s != %s) data: %s",
